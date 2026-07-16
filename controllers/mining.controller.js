@@ -1,10 +1,11 @@
-const { blockchain } = require('../models');
+const { getBlockchain } = require('../models');
 const persistenceService = require('../services/persistence.service');
 const { sendSuccess } = require('../utils/response');
 const logger = require('../utils/logger');
 
 const mineBlock = async (req, res, next) => {
   try {
+    const blockchain = getBlockchain();
     const miningRewardAddress = req.body.miningRewardAddress || "miner1";
 
     logger.info(`Mining block for reward address: ${miningRewardAddress}`);

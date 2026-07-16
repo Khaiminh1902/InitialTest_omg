@@ -1,7 +1,8 @@
-const { blockchain } = require('../models');
+const { getBlockchain } = require('../models');
 const { sendSuccess } = require('../utils/response');
 
 const getStats = (req, res) => {
+  const blockchain = getBlockchain();
   const allTransactions = blockchain.getAllTransactions();
   const walletAddresses = new Set();
 

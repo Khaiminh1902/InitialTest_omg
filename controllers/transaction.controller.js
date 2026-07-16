@@ -1,10 +1,11 @@
-const { blockchain, Transaction } = require('../models');
+const { getBlockchain, Transaction } = require('../models');
 const persistenceService = require('../services/persistence.service');
 const { sendSuccess, sendCreated, sendError } = require('../utils/response');
 const { isValidAddress, isValidAmount, sanitizeAddress, sanitizeAmount } = require('../utils/validator');
 
 const addTransaction = async (req, res, next) => {
   try {
+    const blockchain = getBlockchain();
     const { fromAddress, toAddress, amount, signature } = req.body;
 
     if (!isValidAddress(fromAddress) || !isValidAddress(toAddress)) {
@@ -38,6 +39,7 @@ const addTransaction = async (req, res, next) => {
 };
 
 const getPendingTransactions = (req, res) => {
+  const blockchain = getBlockchain();
   sendSuccess(res, {
     pendingTransactions: blockchain.pendingTransactions,
     count: blockchain.pendingTransactions.length,
@@ -45,6 +47,7 @@ const getPendingTransactions = (req, res) => {
 };
 
 const getAllTransactions = (req, res) => {
+  const blockchain = getBlockchain();
   const transactions = blockchain.getAllTransactions();
   sendSuccess(res, { transactions, count: transactions.length });
 };

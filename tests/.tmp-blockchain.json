@@ -1,0 +1,22 @@
+{
+  "chain": [
+    {
+      "timestamp": 1784181069513,
+      "transactions": [],
+      "previousHash": "0",
+      "nonce": 0,
+      "hash": "a803808053eaa203ca4c6e19d6af61aa70564b1981d7b58bfc0a989ba15dfa6b"
+    }
+  ],
+  "pendingTransactions": [
+    {
+      "fromAddress": "wallet-a",
+      "toAddress": "wallet-b",
+      "amount": 25,
+      "timestamp": 1784181069513,
+      "signature": "signature-placeholder"
+    }
+  ],
+  "difficulty": 1,
+  "miningReward": 10
+}

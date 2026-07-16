@@ -8,6 +8,7 @@ let blockchain = new Blockchain(
   config.blockchain.difficulty,
   config.blockchain.miningReward
 );
+let initializationPromise = null;
 
 const seedDemoData = () => {
   if (!config.demoData.enabled) {
@@ -28,26 +29,35 @@ const seedDemoData = () => {
 };
 
 const initializeBlockchain = async () => {
+  if (initializationPromise) {
+    return initializationPromise;
+  }
+
+  initializationPromise = (async () => {
   const restored = await persistenceService.load();
 
-  if (restored) {
-    blockchain = restored;
-    logger.info('Loaded persisted blockchain state');
-    return;
-  }
+    if (restored) {
+      blockchain = restored;
+      logger.info('Loaded persisted blockchain state');
+      return blockchain;
+    }
 
-  seedDemoData();
-  if (blockchain.pendingTransactions.length > 0) {
-    await persistenceService.save(blockchain);
-  }
+    seedDemoData();
+    if (blockchain.pendingTransactions.length > 0) {
+      await persistenceService.save(blockchain);
+    }
+
+    return blockchain;
+  })();
+
+  return initializationPromise;
 };
 
-initializeBlockchain();
+const getBlockchain = () => blockchain;
 
 module.exports = {
-  get blockchain() {
-    return blockchain;
-  },
+  getBlockchain,
+  initializeBlockchain,
   Blockchain,
   Block,
   Transaction,

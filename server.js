@@ -4,6 +4,7 @@ const path = require("path");
 
 const config = require("./config");
 const logger = require("./utils/logger");
+const { initializeBlockchain } = require("./models");
 
 const corsMiddleware = require("./middleware/cors.middleware");
 const requestLogger = require("./middleware/logger.middleware");
@@ -15,6 +16,7 @@ const apiRoutes = require("./routes");
 const healthRoutes = require("./routes/health.routes");
 const app = express();
 const portFile = path.join(__dirname, ".server-port");
+const host = "127.0.0.1";
 
 const writePortFile = (port) => {
   fs.writeFileSync(portFile, String(port), "utf8");
@@ -47,14 +49,16 @@ app.use(errorHandler);
 
 // ── Start server ───────────────────────────────────────────────────────────────
 const startServer = async () => {
+  await initializeBlockchain();
+
   const portToUse = config.apiPort;
   process.env.API_PORT = String(portToUse);
   writePortFile(portToUse);
 
-  const server = app.listen(portToUse, () => {
+  const server = app.listen(portToUse, host, () => {
     logger.sysinfo(`Environment : ${config.env}`);
-    logger.info(`Server      : http://localhost:${portToUse}`);
-    logger.info(`API         : http://localhost:${portToUse}/api`);
+    logger.info(`Server      : http://${host}:${portToUse}`);
+    logger.info(`API         : http://${host}:${portToUse}/api`);
   });
 
   server.on("error", (err) => {
