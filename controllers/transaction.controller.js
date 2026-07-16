@@ -1,7 +1,41 @@
 const { getBlockchain, Transaction } = require('../models');
 const persistenceService = require('../services/persistence.service');
+const { signTransactionPayload } = require('../services/signing.service');
 const { sendSuccess, sendCreated, sendError } = require('../utils/response');
 const { isValidAddress, isValidAmount, sanitizeAddress, sanitizeAmount } = require('../utils/validator');
+
+const signTransaction = (req, res, next) => {
+  try {
+    const { fromAddress, toAddress, amount, privateKey } = req.body;
+
+    if (!privateKey || typeof privateKey !== "string") {
+      return sendError(res, "A private key is required to sign the transaction.", 400);
+    }
+
+    if (!isValidAddress(fromAddress) || !isValidAddress(toAddress)) {
+      return sendError(res, 'Invalid wallet address format', 400);
+    }
+
+    if (!isValidAmount(amount)) {
+      return sendError(res, 'Amount must be a positive number', 400);
+    }
+
+    const signed = signTransactionPayload({
+      fromAddress: sanitizeAddress(fromAddress),
+      toAddress: sanitizeAddress(toAddress),
+      amount: sanitizeAmount(amount),
+      privateKey,
+    });
+
+    sendSuccess(res, {
+      message: "Transaction signed successfully.",
+      fromAddress: signed.fromAddress,
+      signature: signed.signature,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
 const addTransaction = async (req, res, next) => {
   try {
@@ -52,4 +86,4 @@ const getAllTransactions = (req, res) => {
   sendSuccess(res, { transactions, count: transactions.length });
 };
 
-module.exports = { addTransaction, getPendingTransactions, getAllTransactions };
+module.exports = { signTransaction, addTransaction, getPendingTransactions, getAllTransactions };

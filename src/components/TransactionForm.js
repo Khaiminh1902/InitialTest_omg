@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './TransactionForm.css';
-import { addTransaction } from '../api/blockchain.api';
+import { addTransaction, signTransaction } from '../api/blockchain.api';
 import { validateTransactionForm } from '../utils/helpers';
 import { truncateHash } from '../utils/formatters';
 
@@ -39,18 +39,38 @@ const TransactionForm = ({ selectedWallet, onTransactionAdded, onNotify }) => {
     setErrors({});
 
     try {
+      let signedFromAddress = formData.fromAddress.trim();
+      let signature = 'signature-placeholder';
+      const isSelectedWalletSender =
+        selectedWallet?.publicKey &&
+        signedFromAddress === selectedWallet.publicKey &&
+        selectedWallet.privateKey;
+
+      if (isSelectedWalletSender) {
+        const signed = await signTransaction(
+          signedFromAddress,
+          formData.toAddress.trim(),
+          formData.amount,
+          selectedWallet.privateKey
+        );
+        signedFromAddress = signed.fromAddress;
+        signature = signed.signature;
+      }
+
       const response = await addTransaction(
-        formData.fromAddress.trim(),
+        signedFromAddress,
         formData.toAddress.trim(),
         formData.amount,
-        'signature-placeholder'
+        signature
       );
       setFormData({ fromAddress: '', toAddress: '', amount: '' });
       await onTransactionAdded();
       onNotify({
         type: 'success',
         title: 'Transaction Added',
-        message: response.message || 'The transaction is now pending mining.',
+        message: isSelectedWalletSender
+          ? 'The transaction was signed and added to the pending pool.'
+          : (response.message || 'The transaction is now pending mining.'),
       });
     } catch (err) {
       onNotify({
@@ -73,6 +93,11 @@ const TransactionForm = ({ selectedWallet, onTransactionAdded, onNotify }) => {
         <div className="wallet-status-card compact">
           <span className="wallet-status-label">Selected Sender</span>
           <strong>{selectedWalletLabel}</strong>
+          <span className="wallet-helper-copy">
+            {selectedWallet?.publicKey
+              ? 'Transactions from the selected wallet are signed automatically.'
+              : 'Without a selected wallet, transactions use the demo signature path.'}
+          </span>
           {selectedWallet?.publicKey ? (
             <button
               type="button"

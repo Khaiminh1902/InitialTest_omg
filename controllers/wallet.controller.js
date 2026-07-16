@@ -1,10 +1,11 @@
 const crypto = require('crypto');
 const { sendSuccess, sendError } = require('../utils/response');
 const { isValidAddress, sanitizeAddress } = require('../utils/validator');
-const { blockchain } = require('../models');
+const { getBlockchain } = require('../models');
 
 const generateWallet = (req, res) => {
   try {
+    const blockchain = getBlockchain();
     const { publicKey, privateKey } = crypto.generateKeyPairSync('ec', {
       namedCurve: 'secp256k1',
     });
@@ -23,6 +24,7 @@ const generateWallet = (req, res) => {
 };
 
 const getWalletBalance = (req, res) => {
+  const blockchain = getBlockchain();
   const address = sanitizeAddress(req.params.address);
 
   if (!isValidAddress(address)) {

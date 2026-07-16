@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "savedAt": "2026-07-16T06:27:00.369Z",
+  "chain": [
+    {
+      "timestamp": 1784183220369,
+      "transactions": [],
+      "previousHash": "0",
+      "nonce": 0,
+      "hash": "a885d1ddfc5494f7f5973f3ea2ac441e66289c62a59888221f52b388fd63cf92"
+    }
+  ],
+  "pendingTransactions": [
+    {
+      "fromAddress": "wallet-a",
+      "toAddress": "wallet-b",
+      "amount": 25,
+      "timestamp": 1784183220369,
+      "signature": "signature-placeholder"
+    }
+  ],
+  "difficulty": 1,
+  "miningReward": 10
+}

@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const {
+  signTransaction,
   addTransaction,
   getPendingTransactions,
   getAllTransactions,
@@ -9,6 +10,7 @@ const { writeLimiter } = require('../middleware/rateLimit.middleware');
 
 const router = Router();
 
+router.post('/sign', writeLimiter, validateBody(['fromAddress', 'toAddress', 'amount', 'privateKey']), signTransaction);
 router.post('/', writeLimiter, validateBody(['fromAddress', 'toAddress', 'amount']), addTransaction);
 router.get('/pending', getPendingTransactions);
 router.get('/all', getAllTransactions);

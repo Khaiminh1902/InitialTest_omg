@@ -68,7 +68,7 @@ class Transaction {
         this.fromAddress = publicKeyHex;
       }
       const hashTx = this.calculateHash();
-      const signature = crypto.sign(null, Buffer.from(hashTx), signingKey);
+      const signature = crypto.sign('sha256', Buffer.from(hashTx), signingKey);
       this.signature = signature.toString('hex');
     } catch (error) {
       throw new Error(`Unable to sign transaction: ${error.message}`);
@@ -90,7 +90,7 @@ class Transaction {
       });
 
       return crypto.verify(
-        null,
+        'sha256',
         Buffer.from(this.calculateHash()),
         publicKey,
         Buffer.from(this.signature, 'hex')

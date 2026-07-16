@@ -30,9 +30,12 @@ const fs = require("fs/promises");
 const path = require("path");
 const logger = require("../utils/logger");
 const { Blockchain, Block, Transaction } = require("../models/blockchain");
+const STATE_VERSION = 2;
 
 const getStatePath = () =>
   process.env.BLOCKCHAIN_STATE_PATH || path.join(process.cwd(), "blockchain.json");
+const getBackupStatePath = () => `${getStatePath()}.bak`;
+const getTempStatePath = () => `${getStatePath()}.tmp`;
 
 const hydrateTransaction = (tx = {}) => {
   const restoredTx = new Transaction(tx.fromAddress ?? null, tx.toAddress, tx.amount);
@@ -63,11 +66,23 @@ const normalizeState = (state) => {
   const miningReward = Number.isFinite(Number(state.miningReward)) ? Number(state.miningReward) : 100;
 
   return {
+    version: Number.isFinite(Number(state.version)) ? Number(state.version) : 1,
     chain,
     pendingTransactions,
     difficulty,
     miningReward,
   };
+};
+
+/**
+ * Reads and parses a state file from disk.
+ *
+ * @param {string} filePath - Path to the JSON state file.
+ * @returns {Promise<object|null>}
+ */
+const readStateFile = async (filePath) => {
+  const raw = await fs.readFile(filePath, "utf8");
+  return normalizeState(JSON.parse(raw));
 };
 
 /**
@@ -79,6 +94,8 @@ const normalizeState = (state) => {
 const save = async (blockchain) => {
   try {
     const payload = {
+      version: STATE_VERSION,
+      savedAt: new Date().toISOString(),
       chain: blockchain.chain,
       pendingTransactions: blockchain.pendingTransactions,
       difficulty: blockchain.difficulty,
@@ -86,7 +103,9 @@ const save = async (blockchain) => {
     };
 
     await fs.mkdir(path.dirname(getStatePath()), { recursive: true });
-    await fs.writeFile(getStatePath(), JSON.stringify(payload, null, 2));
+    await fs.writeFile(getTempStatePath(), JSON.stringify(payload, null, 2));
+    await fs.copyFile(getTempStatePath(), getBackupStatePath());
+    await fs.rename(getTempStatePath(), getStatePath());
     logger.info(`Persisted blockchain state to ${getStatePath()}`);
   } catch (error) {
     logger.error(`Failed to persist blockchain state: ${error.message}`);
@@ -101,9 +120,7 @@ const save = async (blockchain) => {
  */
 const load = async () => {
   try {
-    const raw = await fs.readFile(getStatePath(), "utf8");
-    const parsed = JSON.parse(raw);
-    const normalized = normalizeState(parsed);
+    let normalized = await readStateFile(getStatePath());
 
     if (!normalized) {
       logger.warn("Persisted blockchain state was empty; starting fresh.");
@@ -123,7 +140,33 @@ const load = async () => {
     return blockchain;
   } catch (error) {
     if (error.code === "ENOENT") {
+      try {
+        const normalized = await readStateFile(getBackupStatePath());
+        const blockchain = new Blockchain(normalized.difficulty, normalized.miningReward);
+        blockchain.chain = normalized.chain.map(hydrateBlock);
+        blockchain.pendingTransactions = normalized.pendingTransactions.map(hydrateTransaction);
+        logger.warn("Primary blockchain state file was missing; restored from backup.");
+        return blockchain;
+      } catch (backupError) {
+        if (backupError.code === "ENOENT") {
+          return null;
+        }
+      }
+
       return null;
+    }
+
+    try {
+      const normalized = await readStateFile(getBackupStatePath());
+      const blockchain = new Blockchain(normalized.difficulty, normalized.miningReward);
+      blockchain.chain = normalized.chain.map(hydrateBlock);
+      blockchain.pendingTransactions = normalized.pendingTransactions.map(hydrateTransaction);
+      logger.warn("Primary blockchain state file was unreadable; restored from backup.");
+      return blockchain;
+    } catch (backupError) {
+      if (backupError.code !== "ENOENT") {
+        logger.warn(`Unable to load backup blockchain state: ${backupError.message}`);
+      }
     }
 
     logger.warn(`Unable to load persisted blockchain state: ${error.message}`);
@@ -142,6 +185,22 @@ const clear = async () => {
   } catch (error) {
     if (error.code !== "ENOENT") {
       logger.warn(`Unable to clear persisted blockchain state: ${error.message}`);
+    }
+  }
+
+  try {
+    await fs.unlink(getBackupStatePath());
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      logger.warn(`Unable to clear backup blockchain state: ${error.message}`);
+    }
+  }
+
+  try {
+    await fs.unlink(getTempStatePath());
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      logger.warn(`Unable to clear temporary blockchain state: ${error.message}`);
     }
   }
 };

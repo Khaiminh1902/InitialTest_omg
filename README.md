@@ -68,7 +68,6 @@ cp .env.example .env
 Example values:
 
 ```env
-API_PORT=3002
 NODE_ENV=development
 BLOCKCHAIN_DIFFICULTY=2
 BLOCKCHAIN_MINING_REWARD=100
@@ -140,18 +139,18 @@ Error:
 
 Core endpoints:
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/health` | Health check |
-| `GET` | `/api/chain` | Full blockchain |
-| `GET` | `/api/chain/valid` | Chain validity |
-| `GET` | `/api/stats` | Blockchain statistics |
-| `POST` | `/api/wallets` | Create a wallet |
-| `GET` | `/api/balance/:address` | Fetch wallet balance |
-| `POST` | `/api/transactions` | Add a pending transaction |
-| `GET` | `/api/transactions/pending` | Pending transaction pool |
-| `GET` | `/api/transactions/all` | Confirmed transactions |
-| `POST` | `/api/mine` | Mine pending transactions |
+| Method | Path                        | Description               |
+| ------ | --------------------------- | ------------------------- |
+| `GET`  | `/health`                   | Health check              |
+| `GET`  | `/api/chain`                | Full blockchain           |
+| `GET`  | `/api/chain/valid`          | Chain validity            |
+| `GET`  | `/api/stats`                | Blockchain statistics     |
+| `POST` | `/api/wallets`              | Create a wallet           |
+| `GET`  | `/api/balance/:address`     | Fetch wallet balance      |
+| `POST` | `/api/transactions`         | Add a pending transaction |
+| `GET`  | `/api/transactions/pending` | Pending transaction pool  |
+| `GET`  | `/api/transactions/all`     | Confirmed transactions    |
+| `POST` | `/api/mine`                 | Mine pending transactions |
 
 ## Development Notes
 
