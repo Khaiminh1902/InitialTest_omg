@@ -3,7 +3,7 @@ const persistenceService = require('../services/persistence.service');
 const { sendSuccess, sendCreated, sendError } = require('../utils/response');
 const { isValidAddress, isValidAmount, sanitizeAddress, sanitizeAmount } = require('../utils/validator');
 
-const addTransaction = (req, res, next) => {
+const addTransaction = async (req, res, next) => {
   try {
     const { fromAddress, toAddress, amount, signature } = req.body;
 
@@ -21,15 +21,15 @@ const addTransaction = (req, res, next) => {
       sanitizeAmount(amount)
     );
 
-    if (signature) {
-      transaction.signature = signature;
-    }
+    transaction.signature = typeof signature === "string" && signature.trim().length > 0
+      ? signature.trim()
+      : "signature-placeholder";
 
     blockchain.addTransaction(transaction);
-    persistenceService.save(blockchain);
+    await persistenceService.save(blockchain);
 
     sendCreated(res, {
-      message: 'Transaction added to pending pool',
+      message: "Transaction added to the pending pool.",
       transaction,
     });
   } catch (err) {

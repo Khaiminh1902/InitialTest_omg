@@ -30,3 +30,60 @@ export const groupTransactionsByBlock = (chain = []) =>
     acc[index] = block.transactions || [];
     return acc;
   }, {});
+
+/**
+ * Calculates the current wallet balance from the in-memory blockchain payload.
+ */
+export const calculateWalletBalance = (chain = [], address = '') => {
+  if (!address) {
+    return 0;
+  }
+
+  return chain.reduce((total, block) => {
+    const transactions = Array.isArray(block.transactions) ? block.transactions : [];
+
+    return transactions.reduce((runningTotal, transaction) => {
+      let nextTotal = runningTotal;
+
+      if (transaction.fromAddress === address) {
+        nextTotal -= Number(transaction.amount) || 0;
+      }
+
+      if (transaction.toAddress === address) {
+        nextTotal += Number(transaction.amount) || 0;
+      }
+
+      return nextTotal;
+    }, total);
+  }, 0);
+};
+
+/**
+ * Validates the transaction form and returns field-level messages.
+ */
+export const validateTransactionForm = ({ fromAddress, toAddress, amount }) => {
+  const errors = {};
+  const normalizedFrom = fromAddress.trim();
+  const normalizedTo = toAddress.trim();
+  const parsedAmount = parseFloat(amount);
+
+  if (!normalizedFrom) {
+    errors.fromAddress = 'Sender address is required.';
+  }
+
+  if (!normalizedTo) {
+    errors.toAddress = 'Recipient address is required.';
+  }
+
+  if (normalizedFrom && normalizedTo && normalizedFrom === normalizedTo) {
+    errors.toAddress = 'Sender and recipient must be different.';
+  }
+
+  if (!amount && amount !== 0) {
+    errors.amount = 'Amount is required.';
+  } else if (Number.isNaN(parsedAmount) || parsedAmount <= 0) {
+    errors.amount = 'Amount must be greater than zero.';
+  }
+
+  return errors;
+};

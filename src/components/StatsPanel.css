@@ -1,77 +1,145 @@
 .stats-panel {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  padding: 25px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.18);
 }
 
-.panel-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 20px;
-  color: #333;
-  font-family: 'BlockchainFont', sans-serif;
+.stats-panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.chain-status-pill {
+  padding: 9px 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.chain-status-pill.valid {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.chain-status-pill.invalid {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
   margin-bottom: 20px;
 }
 
 .stat-item {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
-  padding: 15px;
+  background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+  border-radius: 18px;
+  padding: 16px;
   color: white;
+  min-width: 0;
 }
 
-.stat-item.status {
-  grid-column: 1 / -1;
+.stat-item.hash {
+  background: linear-gradient(145deg, #115e59 0%, #0f766e 100%);
 }
 
 .stat-label {
-  font-size: 0.85rem;
-  opacity: 0.9;
+  font-size: 0.8rem;
+  opacity: 0.78;
   margin-bottom: 8px;
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .stat-value {
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: clamp(1.05rem, 2.5vw, 1.4rem);
+  font-weight: 700;
   font-family: 'TechMono', monospace;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
-.stat-value.valid {
-  color: #4ade80;
+.mining-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 16px;
 }
 
-.stat-value.invalid {
-  color: #f87171;
+.mining-panel > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.mining-address {
+  font-family: 'TechMono', monospace;
+  color: #0f172a;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .mine-button {
-  width: 100%;
-  padding: 15px;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  flex-shrink: 0;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
   color: white;
   border: none;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: bold;
+  border-radius: 16px;
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  font-family: 'BlockchainFont', sans-serif;
 }
 
-.mine-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+.mine-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
-.mine-button:active {
-  transform: translateY(0);
+.inline-spinner-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.small-spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(15, 118, 110, 0.2);
+  border-top-color: #0f766e;
+  animation: spin 0.8s linear infinite;
+}
+
+@media (max-width: 768px) {
+  .stats-panel-header,
+  .mining-panel {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mine-button {
+    width: 100%;
+  }
 }

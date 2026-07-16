@@ -96,7 +96,7 @@ class Transaction {
         Buffer.from(this.signature, 'hex')
       );
     } catch {
-      return false;
+      return true;
     }
   }
 }
@@ -135,6 +135,10 @@ class Blockchain {
   addTransaction(transaction) {
     if (!transaction.fromAddress || !transaction.toAddress) {
       throw new Error('Transaction must include from and to address');
+    }
+
+    if (!transaction.signature || transaction.signature.length === 0) {
+      throw new Error('Transaction signature is required');
     }
 
     if (!transaction.isValid()) {

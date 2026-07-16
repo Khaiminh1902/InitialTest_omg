@@ -1,4 +1,4 @@
-const { sendError } = require('../utils/response');
+const { sendError } = require("../utils/response");
 
 const notFound = (req, res) => {
   sendError(res, `Route ${req.method} ${req.originalUrl} not found`, 404);

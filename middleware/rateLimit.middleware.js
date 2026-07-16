@@ -9,7 +9,11 @@ const apiLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, error: 'Too many requests, please try again later.' },
+  message: {
+    success: false,
+    message: "Too many requests, please try again later.",
+    error: "Too many requests, please try again later.",
+  },
 });
 
 /**
@@ -21,7 +25,11 @@ const writeLimiter = rateLimit({
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, error: 'Too many write requests, please slow down.' },
+  message: {
+    success: false,
+    message: "Too many write requests, please slow down.",
+    error: "Too many write requests, please slow down.",
+  },
 });
 
 module.exports = { apiLimiter, writeLimiter };

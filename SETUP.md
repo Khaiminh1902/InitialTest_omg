@@ -15,6 +15,9 @@ cp .env.example .env
 Open `.env` and review the settings. The defaults work out of the box — you only need to
 change them if your ports 3000 or 3002 are already in use.
 
+Use `API_PORT=3002` for the backend. Do not set `PORT` in `.env`, otherwise Create React App
+will try to boot on that port as well.
+
 ## 3. Run the Application
 
 Open **two** terminal windows in the project folder:

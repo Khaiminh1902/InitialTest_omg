@@ -1,11 +1,13 @@
 .header {
-  background: rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(circle at top left, rgba(251, 191, 36, 0.28), transparent 32%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.72), rgba(15, 118, 110, 0.5));
   backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 30px;
-  margin-bottom: 30px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 28px;
+  padding: 34px 30px;
+  margin-bottom: 28px;
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .header-content {
@@ -13,12 +15,11 @@
 }
 
 .header-title {
-  font-size: 3rem;
-  font-weight: bold;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-weight: 700;
   color: white;
   margin-bottom: 10px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  font-family: 'BlockchainFont', sans-serif;
+  letter-spacing: -0.03em;
 }
 
 .blockchain-icon {
@@ -28,12 +29,18 @@
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
 }
 
 .header-subtitle {
-  font-size: 1.2rem;
+  font-size: 1.04rem;
   color: rgba(255, 255, 255, 0.9);
-  font-weight: 300;
+  font-weight: 400;
 }

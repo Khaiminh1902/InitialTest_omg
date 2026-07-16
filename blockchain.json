@@ -1,0 +1,29 @@
+{
+  "chain": [
+    {
+      "timestamp": 1784173180748,
+      "transactions": [],
+      "previousHash": "0",
+      "nonce": 0,
+      "hash": "ac02f268ac75bc4f44395cb285a0c28a36decadda72df924a67e71bdd9dd2573"
+    },
+    {
+      "timestamp": 1784173180934,
+      "transactions": [
+        {
+          "fromAddress": null,
+          "toAddress": "3056301006072a8648ce3d020106052b8104000a034200040d7210cd1c0be6c4f9f97318c4fe08d63b957a3edd6361d992766a5f979bfa72a5f12e4d6c3841810f9a681d1fa08dcd5704dcd6fb7260331c01606b0c16d9f8",
+          "amount": 100,
+          "timestamp": 1784173180934,
+          "signature": ""
+        }
+      ],
+      "previousHash": "ac02f268ac75bc4f44395cb285a0c28a36decadda72df924a67e71bdd9dd2573",
+      "nonce": 364,
+      "hash": "008e4f7a6cfc28d67066a838a9fb8701699469a3956f3a2bf24479b3426aaf7e"
+    }
+  ],
+  "pendingTransactions": [],
+  "difficulty": 2,
+  "miningReward": 100
+}

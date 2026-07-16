@@ -26,40 +26,30 @@
  * }
  */
 
-const fs = require('fs/promises');
-const path = require('path');
-const logger = require('../utils/logger');
-const { Blockchain, Transaction } = require('../models/blockchain');
+const fs = require("fs/promises");
+const path = require("path");
+const logger = require("../utils/logger");
+const { Blockchain, Block, Transaction } = require("../models/blockchain");
 
-const defaultStatePath = process.env.BLOCKCHAIN_STATE_PATH || path.join(process.cwd(), 'blockchain.json');
+const getStatePath = () =>
+  process.env.BLOCKCHAIN_STATE_PATH || path.join(process.cwd(), "blockchain.json");
 
-const resolveStatePath = () => defaultStatePath;
+const hydrateTransaction = (tx = {}) => {
+  const restoredTx = new Transaction(tx.fromAddress ?? null, tx.toAddress, tx.amount);
+  restoredTx.timestamp = tx.timestamp || restoredTx.timestamp;
+  restoredTx.signature = tx.signature || restoredTx.signature;
+  return restoredTx;
+};
 
-const restoreBlock = (blockData) => {
-  const block = new Blockchain(1, 100);
-  const restoredTransactions = (blockData.transactions || []).map((tx) => new Transaction(
-    tx.fromAddress,
-    tx.toAddress,
-    tx.amount,
-  ));
-
-  restoredTransactions.forEach((tx, index) => {
-    const source = blockData.transactions[index] || {};
-    tx.timestamp = source.timestamp || tx.timestamp;
-    tx.signature = source.signature || tx.signature;
-  });
-
-  block.chain = [];
-  block.pendingTransactions = [];
-  block.chain.push({
-    timestamp: blockData.timestamp,
-    transactions: restoredTransactions,
-    previousHash: blockData.previousHash,
-    nonce: blockData.nonce,
-    hash: blockData.hash,
-  });
-
-  return block.chain[0];
+const hydrateBlock = (entry = {}) => {
+  const restored = new Block(
+    entry.timestamp || Date.now(),
+    (entry.transactions || []).map(hydrateTransaction),
+    entry.previousHash || "0"
+  );
+  restored.nonce = entry.nonce || 0;
+  restored.hash = entry.hash || restored.calculateHash();
+  return restored;
 };
 
 const normalizeState = (state) => {
@@ -95,11 +85,12 @@ const save = async (blockchain) => {
       miningReward: blockchain.miningReward,
     };
 
-    await fs.mkdir(path.dirname(resolveStatePath()), { recursive: true });
-    await fs.writeFile(resolveStatePath(), JSON.stringify(payload, null, 2));
-    logger.info(`Persisted blockchain state to ${resolveStatePath()}`);
+    await fs.mkdir(path.dirname(getStatePath()), { recursive: true });
+    await fs.writeFile(getStatePath(), JSON.stringify(payload, null, 2));
+    logger.info(`Persisted blockchain state to ${getStatePath()}`);
   } catch (error) {
     logger.error(`Failed to persist blockchain state: ${error.message}`);
+    throw error;
   }
 };
 
@@ -110,49 +101,28 @@ const save = async (blockchain) => {
  */
 const load = async () => {
   try {
-    const raw = await fs.readFile(resolveStatePath(), 'utf8');
+    const raw = await fs.readFile(getStatePath(), "utf8");
     const parsed = JSON.parse(raw);
     const normalized = normalizeState(parsed);
 
     if (!normalized) {
-      logger.warn('Persisted blockchain state was empty; starting fresh.');
+      logger.warn("Persisted blockchain state was empty; starting fresh.");
       return null;
     }
 
     const blockchain = new Blockchain(normalized.difficulty, normalized.miningReward);
-    blockchain.chain = normalized.chain.map((entry) => {
-      const restored = new Block(entry.timestamp, [], entry.previousHash);
-      restored.nonce = entry.nonce || 0;
-      restored.hash = entry.hash || restored.hash;
-      restored.transactions = (entry.transactions || []).map((tx) => {
-        const restoredTx = new Transaction(tx.fromAddress, tx.toAddress, tx.amount);
-        restoredTx.timestamp = tx.timestamp || restoredTx.timestamp;
-        restoredTx.signature = tx.signature || restoredTx.signature;
-        return restoredTx;
-      });
-      return restored;
-    });
-    blockchain.pendingTransactions = normalized.pendingTransactions.map((tx) => new Transaction(
-      tx.fromAddress,
-      tx.toAddress,
-      tx.amount,
-    ));
-
-    blockchain.pendingTransactions.forEach((tx, index) => {
-      const source = normalized.pendingTransactions[index] || {};
-      tx.timestamp = source.timestamp || tx.timestamp;
-      tx.signature = source.signature || tx.signature;
-    });
+    blockchain.chain = normalized.chain.map(hydrateBlock);
+    blockchain.pendingTransactions = normalized.pendingTransactions.map(hydrateTransaction);
 
     if (!blockchain.isChainValid()) {
-      logger.warn('Persisted blockchain state was invalid; starting fresh.');
+      logger.warn("Persisted blockchain state was invalid; starting fresh.");
       return null;
     }
 
-    logger.info('Restored blockchain state from disk');
+    logger.info("Restored blockchain state from disk");
     return blockchain;
   } catch (error) {
-    if (error.code === 'ENOENT') {
+    if (error.code === "ENOENT") {
       return null;
     }
 
@@ -168,9 +138,9 @@ const load = async () => {
  */
 const clear = async () => {
   try {
-    await fs.unlink(resolveStatePath());
+    await fs.unlink(getStatePath());
   } catch (error) {
-    if (error.code !== 'ENOENT') {
+    if (error.code !== "ENOENT") {
       logger.warn(`Unable to clear persisted blockchain state: ${error.message}`);
     }
   }

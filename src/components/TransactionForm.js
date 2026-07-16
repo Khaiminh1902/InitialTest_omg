@@ -1,33 +1,63 @@
 import React, { useState } from 'react';
 import './TransactionForm.css';
 import { addTransaction } from '../api/blockchain.api';
+import { validateTransactionForm } from '../utils/helpers';
+import { truncateHash } from '../utils/formatters';
 
-const TransactionForm = ({ onTransactionAdded }) => {
+const TransactionForm = ({ selectedWallet, onTransactionAdded, onNotify }) => {
   const [formData, setFormData] = useState({
     fromAddress: '',
     toAddress: '',
     amount: '',
   });
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [errors, setErrors] = useState({});
+  const selectedWalletLabel = selectedWallet?.publicKey
+    ? truncateHash(selectedWallet.publicKey, 10)
+    : 'None';
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setMessage('');
+    setErrors((current) => ({ ...current, [e.target.name]: '' }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const nextErrors = validateTransactionForm(formData);
+
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      onNotify({
+        type: 'error',
+        title: 'Invalid transaction',
+        message: 'Fix the validation errors before submitting.',
+      });
+      return;
+    }
+
     setLoading(true);
-    setMessage('');
+    setErrors({});
 
     try {
-      await addTransaction(formData.fromAddress, formData.toAddress, formData.amount);
-      setMessage('Transaction added successfully!');
+      const response = await addTransaction(
+        formData.fromAddress.trim(),
+        formData.toAddress.trim(),
+        formData.amount,
+        'signature-placeholder'
+      );
       setFormData({ fromAddress: '', toAddress: '', amount: '' });
-      onTransactionAdded();
+      await onTransactionAdded();
+      onNotify({
+        type: 'success',
+        title: 'Transaction Added',
+        message: response.message || 'The transaction is now pending mining.',
+      });
     } catch (err) {
-      setMessage(err.message || 'Failed to add transaction');
+      onNotify({
+        type: 'error',
+        title: 'Transaction failed',
+        message: err.message || 'Failed to add transaction.',
+      });
     } finally {
       setLoading(false);
     }
@@ -36,9 +66,23 @@ const TransactionForm = ({ onTransactionAdded }) => {
   return (
     <div className="transaction-form">
       <h2 className="panel-title">Create Transaction</h2>
-      
+
       <form onSubmit={handleSubmit}>
-        <p className="panel-subtitle">Use a wallet public key and a signed transaction payload to test the blockchain flow.</p>
+        <p className="panel-subtitle">Queue a pending transaction, validate it locally, and mine it into the next block.</p>
+
+        <div className="wallet-status-card compact">
+          <span className="wallet-status-label">Selected Sender</span>
+          <strong>{selectedWalletLabel}</strong>
+          {selectedWallet?.publicKey ? (
+            <button
+              type="button"
+              className="copy-button"
+              onClick={() => setFormData((current) => ({ ...current, fromAddress: selectedWallet.publicKey }))}
+            >
+              Use Wallet
+            </button>
+          ) : null}
+        </div>
 
         <div className="form-group">
           <label htmlFor="fromAddress">From Address</label>
@@ -51,8 +95,9 @@ const TransactionForm = ({ onTransactionAdded }) => {
             placeholder="e.g., wallet-public-key"
             required
           />
+          {errors.fromAddress ? <div className="field-error">{errors.fromAddress}</div> : null}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="toAddress">To Address</label>
           <input
@@ -64,8 +109,9 @@ const TransactionForm = ({ onTransactionAdded }) => {
             placeholder="e.g., wallet-public-key"
             required
           />
+          {errors.toAddress ? <div className="field-error">{errors.toAddress}</div> : null}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="amount">Amount</label>
           <input
@@ -79,16 +125,11 @@ const TransactionForm = ({ onTransactionAdded }) => {
             min="0"
             required
           />
+          {errors.amount ? <div className="field-error">{errors.amount}</div> : null}
         </div>
-        
-        {message && (
-          <div className={`form-message ${message.includes('success') ? 'success' : 'error'}`}>
-            {message}
-          </div>
-        )}
-        
+
         <button type="submit" className="submit-button" disabled={loading}>
-          {loading ? 'Adding...' : 'Add Transaction'}
+          {loading ? 'Sending Transaction...' : 'Add Transaction'}
         </button>
       </form>
     </div>

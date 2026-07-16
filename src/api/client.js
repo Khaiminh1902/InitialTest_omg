@@ -25,10 +25,14 @@ client.interceptors.response.use(
   },
   (error) => {
     const message =
+      error.response?.data?.message ||
       error.response?.data?.error ||
       error.message ||
       'An unexpected error occurred';
-    return Promise.reject(new Error(message));
+    const wrappedError = new Error(message);
+    wrappedError.status = error.response?.status;
+    wrappedError.details = error.response?.data?.details;
+    return Promise.reject(wrappedError);
   }
 );
 

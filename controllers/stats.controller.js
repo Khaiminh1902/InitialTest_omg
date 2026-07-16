@@ -3,6 +3,17 @@ const { sendSuccess } = require('../utils/response');
 
 const getStats = (req, res) => {
   const allTransactions = blockchain.getAllTransactions();
+  const walletAddresses = new Set();
+
+  [...allTransactions, ...blockchain.pendingTransactions].forEach((tx) => {
+    if (tx.fromAddress) {
+      walletAddresses.add(tx.fromAddress);
+    }
+
+    if (tx.toAddress) {
+      walletAddresses.add(tx.toAddress);
+    }
+  });
 
   sendSuccess(res, {
     chainLength: blockchain.chain.length,
@@ -10,6 +21,7 @@ const getStats = (req, res) => {
     totalTransactions: allTransactions.length,
     difficulty: blockchain.difficulty,
     miningReward: blockchain.miningReward,
+    walletCount: walletAddresses.size,
     isValid: blockchain.isChainValid(),
     latestBlockHash: blockchain.getLatestBlock().hash,
   });

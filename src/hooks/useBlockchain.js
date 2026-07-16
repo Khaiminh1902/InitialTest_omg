@@ -6,10 +6,12 @@ const useBlockchain = (pollInterval = POLL_INTERVAL_MS) => {
   const [chain, setChain] = useState(null);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const intervalRef = useRef(null);
 
   const refresh = useCallback(async () => {
+    setRefreshing(true);
     try {
       const { chainData, statsData } = await fetchDashboard();
       setChain(chainData);
@@ -19,6 +21,7 @@ const useBlockchain = (pollInterval = POLL_INTERVAL_MS) => {
       setError(err.message || 'Failed to connect to the blockchain API.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
@@ -28,7 +31,7 @@ const useBlockchain = (pollInterval = POLL_INTERVAL_MS) => {
     return () => clearInterval(intervalRef.current);
   }, [refresh, pollInterval]);
 
-  return { chain, stats, loading, error, refresh };
+  return { chain, stats, loading, refreshing, error, refresh };
 };
 
 export default useBlockchain;

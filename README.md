@@ -1,78 +1,74 @@
-# Blockchain Explorer and Smart Contract Demo
+# Blockchain Web3 Full Stack Assessment
 
-This repository is a compact full-stack demo for exploring blockchain concepts, interacting with a simplified chain, and reviewing a basic Solidity token contract.
+## Overview
 
-It combines:
-- a layered Express backend for a simplified blockchain
-- a React-based explorer for interacting with the chain
-- a Solidity smart contract example for assessment and deployment discussion
-- a persistence layer so the chain can survive restarts
+This project is a production-minded refinement of a simplified blockchain demo for a Web3 Full Stack Engineer assessment. It keeps the original architecture and API surface intact while improving reliability, usability, error handling, and documentation.
 
----
+The repository includes:
 
-## What’s Included
+- An Express API for wallets, balances, transactions, mining, chain inspection, and stats
+- A React dashboard for interacting with the blockchain
+- A simplified blockchain domain model with persistence
+- A Solidity example contract in `contracts/AssessmentToken.sol`
 
-### Backend
-- Express API with routes for chain, transactions, mining, balance, stats, and wallets
-- Blockchain domain model with block hashing, transaction validation, and mining logic
-- Persistence layer that saves blockchain state to a JSON file
-- Centralized middleware for error handling, logging, validation, and rate limiting
+## Architecture
 
-### Frontend
-- React dashboard to inspect blockchain state and mine blocks
-- Wallet creation panel for generating key material and checking balances
-- Transaction form for creating pending transactions
-- Polling-based refresh for near-real-time updates
-
-### Smart Contracts
-- Solidity contract example in [contracts/AssessmentToken.sol](contracts/AssessmentToken.sol)
-- Deployment script in [scripts/deploy-contract.js](scripts/deploy-contract.js)
-
----
-
-## Project Structure
+The backend keeps the existing layered design:
 
 ```text
-hometask-blockchain/
-├── config/
-├── controllers/
-├── contracts/
-├── middleware/
-├── models/
-├── routes/
-├── scripts/
-├── services/
-├── src/
-├── tests/
-├── package.json
-├── server.js
+Routes
+  ↓
+Controllers
+  ↓
+Services
+  ↓
+Models
+```
+
+The frontend keeps business logic out of components by using API helpers, hooks, and utility functions.
+
+## Folder Structure
+
+```text
+.
+├── config/         # Environment and runtime configuration
+├── controllers/    # Request handlers
+├── contracts/      # Solidity assessment artifact
+├── middleware/     # Express middleware
+├── models/         # Blockchain, Block, Transaction domain models
+├── routes/         # API route definitions
+├── services/       # Persistence and supporting services
+├── src/            # React application
+├── tests/          # Backend regression tests
+├── server.js       # Express entrypoint
 └── README.md
 ```
 
----
+## Features
 
-## Getting Started
+- Fixed local development port separation
+- Production-only static asset serving
+- Consistent API response structure
+- Improved persistence restore behavior
+- Wallet generation with copy actions and balance refresh
+- Transaction validation and clearer feedback
+- Mining feedback with loading and success/error notifications
+- Card-based blockchain explorer with expandable transactions
+- Dashboard-style statistics panel
+- Regression tests for transaction validation and persistence
 
-### Prerequisites
-- Node.js 18+
-- npm
+## Environment
 
-### Install
-
-```bash
-npm install
-```
-
-### Configure environment
+Create `.env` from the example file:
 
 ```bash
 cp .env.example .env
 ```
 
-If you do not have an .env.example file yet, create one with values such as:
+Example values:
 
 ```env
-PORT=3002
+API_PORT=3002
 NODE_ENV=development
 BLOCKCHAIN_DIFFICULTY=2
 BLOCKCHAIN_MINING_REWARD=100
@@ -81,76 +77,130 @@ SEED_DEMO_DATA=true
 REACT_APP_API_URL=http://localhost:3002
 ```
 
-### Run the app
+Important:
+
+- React runs on `http://localhost:3000`
+- Express runs on `http://localhost:3002`
+- The backend now reads `API_PORT`, not `PORT`
+
+## How To Run
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+### Development
+
+Run the frontend and backend in separate terminals:
 
 ```bash
 # Terminal 1
 npm start
+```
 
+```bash
 # Terminal 2
 npm run dev
 ```
 
-The React app uses the proxy in [src/setupProxy.js](src/setupProxy.js) so browser requests to /api are forwarded to the backend.
+The React dev server proxies `/api/*` to the backend. In development, Express exposes API routes only and does not try to serve `build/index.html`.
 
----
+### Production
+
+Create the React build and serve it through Express:
+
+```bash
+npm run serve
+```
+
+In production, Express serves the compiled frontend from `build/`.
 
 ## API Overview
 
-All API responses follow this pattern:
+Responses follow a consistent JSON format.
+
+Success:
 
 ```json
-{ "success": true, "message": "...", ... }
+{
+  "success": true
+}
 ```
 
-### Core endpoints
+Error:
+
+```json
+{
+  "success": false,
+  "message": "Something went wrong"
+}
+```
+
+Core endpoints:
 
 | Method | Path | Description |
 |---|---|---|
-| GET | /api/chain | Return the full blockchain |
-| GET | /api/chain/valid | Return whether the chain is valid |
-| POST | /api/transactions | Add a pending transaction |
-| GET | /api/transactions/pending | View pending transactions |
-| POST | /api/mine | Mine the pending transactions |
-| GET | /api/balance/:address | Get an address balance |
-| GET | /api/stats | View chain and mining statistics |
-| POST | /api/wallets | Generate a wallet-like key pair |
-| GET | /api/wallets/:address | View a balance for a wallet address |
+| `GET` | `/health` | Health check |
+| `GET` | `/api/chain` | Full blockchain |
+| `GET` | `/api/chain/valid` | Chain validity |
+| `GET` | `/api/stats` | Blockchain statistics |
+| `POST` | `/api/wallets` | Create a wallet |
+| `GET` | `/api/balance/:address` | Fetch wallet balance |
+| `POST` | `/api/transactions` | Add a pending transaction |
+| `GET` | `/api/transactions/pending` | Pending transaction pool |
+| `GET` | `/api/transactions/all` | Confirmed transactions |
+| `POST` | `/api/mine` | Mine pending transactions |
 
----
+## Development Notes
 
-## Smart Contract Notes
-
-The Solidity contract in [contracts/AssessmentToken.sol](contracts/AssessmentToken.sol) is a simple ERC-20-style token example. It demonstrates:
-- token supply initialization
-- balance tracking
-- transfer and approval flows
-- basic events
-
-It is intended as an assessment artifact and can be extended for more advanced scenarios.
-
----
+- Persistence is stored in `blockchain.json` by default.
+- Tests can override the persistence path with `BLOCKCHAIN_STATE_PATH`.
+- Mining and transaction writes are rate-limited.
+- The UI polls for updated chain and stats data every 5 seconds.
 
 ## Testing
-
-A basic regression suite is included in [tests/blockchain.test.js](tests/blockchain.test.js).
 
 Run:
 
 ```bash
+npm run lint
 node --test
+npm run build
 ```
 
----
+Manual verification checklist:
+
+- Create a wallet
+- Copy the generated address
+- Refresh the balance
+- Submit a transaction
+- Mine a block
+- Confirm the stats update
+- Restart the API and confirm the blockchain state is restored
+- Check `/api/chain/valid`
+
+## Screenshots
+
+Placeholder:
+
+- Dashboard overview
+- Wallet creation flow
+- Transaction form validation
+- Blockchain explorer expanded block view
+
+## Future Improvements
+
+- End-to-end cryptographic signing in the browser
+- More granular automated frontend tests
+- Richer wallet history and transaction filtering
+- Multiple saved wallets per browser session
+- Stronger persistence recovery diagnostics
 
 ## Known Limitations
 
-- The blockchain is still a simplified educational implementation, not a production-grade distributed ledger.
-- Wallet generation is demonstration-oriented and does not yet implement a full signing workflow end-to-end in the UI.
-- The smart contract is intentionally simple for assessment purposes.
-
----
-
-## License
-
-One More Game
+- The blockchain implementation is intentionally simplified and not distributed.
+- Transaction signing is still demo-oriented rather than a full wallet protocol.
+- Persistence uses a local JSON file instead of a database.
+- The Solidity contract is included as an assessment artifact and is not wired into the UI.
